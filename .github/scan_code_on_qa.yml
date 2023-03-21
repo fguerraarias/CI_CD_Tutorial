@@ -1,0 +1,62 @@
+#unique name for this workflow
+name: Code validation against QA environment
+
+#Definition when the workflow should run
+on:
+  push: 
+  # branches: [feature*, release*]
+  branches:
+    - 'feature*''
+    - 'release-branch*''
+    - 'release-master*''
+  path:
+    - 'force-app/**'
+
+# Jobs to be executed
+jobs:
+  validate-branch-against-qa:
+    runs-on: ubuntu-latest
+    steps:
+      # Install Salesforce CLI
+      - name: 'Install Salesforce CLI'
+      run: |
+        wget https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/stable/sfdx-linux-x64.tar.xz
+        mkdir ~/sfdx/
+        tar xJF sfdx-linux-x64.tar.xz -C ~/sfdx --strip-components 1
+        echo "$HOME/sfdx/bin" >> $GITHUB_PATH
+        ~/sfdx/bin/sfdx version
+
+      # Install SFDX-Git-Delta Plugin
+      - name: 'Install SFDX GIT DELTA PLUGIN'
+      run: |
+        echo y  | sfdx plugins: install sfdx-git-delta
+        sfdx plugins
+
+      # Install Java
+      - name: 'Installing Java'
+      run: | 
+        sudo apt-get updata
+        sudo apt install default-jdk
+
+      #Store secret of the Org
+      - name: 'Populate auth file'
+        shell: bash
+        run: echo ${{secret.ORG_QA_URL}} > ./ORG_QA_URL.txt
+
+      # Authenticate to Org
+      - name: 'Authenticate to QA Org'
+        run: sfdx auth:sfdxurl:store -f ./ORG_QA_URL.txt -s -a integration
+
+      # Generate Delta Package
+      - name: 'Create Delta Package'
+        run: |
+          sfdx sgd:source:delta --to "HEAD" --from "HEAD~7" --output "." --source force-app/
+          echo "-- package/package.xml generate by plugin --"
+          cat package/package.xml
+
+        # Run Validation command based on package.xml
+        - name: 'Validation Delta Changes'
+          run: sfdx force:source:deploy --checkonly -x package/package.xml --verbose --json
+
+
+
