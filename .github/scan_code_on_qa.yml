@@ -6,9 +6,9 @@ on:
   push: 
   # branches: [feature*, release*]
   branches:
-    - 'feature*''
-    - 'release-branch*''
-    - 'release-master*''
+    - 'feature*'
+    - 'release-branch*'
+    - 'release-master*'
   path:
     - 'force-app/**'
 
