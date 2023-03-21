@@ -38,6 +38,12 @@ jobs:
         sudo apt-get updata
         sudo apt install default-jdk
 
+      # Checkout the source code
+        - name: 'Checkout source code'
+          uses: actions/checkout@v3
+          with: 
+            fetch-depth: 0
+
       #Store secret of the Org
       - name: 'Populate auth file'
         shell: bash
