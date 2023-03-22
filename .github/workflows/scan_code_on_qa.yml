@@ -6,9 +6,9 @@ on:
   push: 
   # branches: [feature*, release*]
   branches:
-    - feature*
-    - release-branch*
-    - release-master*
+    - 'feature*'
+    - 'release-branch*'
+    - 'release-master*'
   path:
     - force-app/**
 
@@ -17,57 +17,50 @@ on:
     validate-branch-against-qa:
       runs-on: ubuntu-latest
       steps:
-      
         # Install Salesforce CLI
         - name: Install Salesforce CLI
-        - run:
+          run: |
             wget https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/stable/sfdx-linux-x64.tar.xz
-            mkdir ~/sfdx/
-            tar xJF sfdx-linux-x64.tar.xz -C ~/sfdx --strip-components 1
+            mkdir ~/sfdx
+            tar xJf sfdx-linux-x64.tar.xz -C ~/sfdx --strip-components 1
             echo "$HOME/sfdx/bin" >> $GITHUB_PATH
-            echo ~/sfdx/bin/sfdx version
+            ~/sfdx/bin/sfdx version
 
         # Install Salesforce SFDX-Git-Delta Plugin
         - name: Install Salesforce SFDX-Git-Delta Plugin
-        - run: |
+          run: |
             echo y | sfdx plugins: install sfdx-git-delta
             sfdx plugins
 
         # Install Java
         - name: 'Installing Java'
-        - run: |
-            sudo apt-get updata
+          run: |
+            sudo apt-get update
             sudo apt install default-jdk
-
-        # Checkout the Source Code
-        - name: 'Checkout source code'
-        - uses: actions/checkout@v3
-        - with: 
-            fetch-depth:0
 
         # Checkout the source code
         - name: 'Checkout source code'
-        - uses: actions/checkout@v3
-        - with:
+          uses: actions/checkout@v3
+          with:
             fetch-depth:0
 
         #Store secret of the Org
         - name: 'Populate auth file'
-        - shell: bash
-        - run: echo ${{secret.ORG_QA_URL}} > ./ORG_QA_URL.txt
+          shell: bash
+          run: echo ${{secrets.ORG_QA_URL}} > ./ORG_QA_URL.txt
 
         # Authenticate to Org
-        - name: 'echo ${{secret.ORG_QA_URL}} > ./ORG_QA_URL.txt'
-        - run: sfdx auth:sfdxurl:store -f ./ORG_QA_URL.txt -s -a integration
+        - name: 'Authenticate to QA Org'
+          run: sfdx auth:sfdxurl:store -f ./ORG_QA_URL.txt -s -a integration
 
         # Generate Delta Package
         - name: 'Create Delta Package'
-        - run: |
+          run: |
             sfdx sgd:source:delta --to "HEAD" --from "HEAD~7" --output "." --source force-app/
             echo "-- package/package.xml generate by plugin --"
             cat package/package.xml
 
         # Run Validation command based on package.xml
-        - name: 'Validation Delta Changes'
-        - run: sfdx force:source:deploy --checkonly -x package/package.xml --verbose --json
+        - name: 'Validate Delta Changes'
+          run: sfdx force:source:deploy --checkonly -x package/package.xml --verbose --json
         
