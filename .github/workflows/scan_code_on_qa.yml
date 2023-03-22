@@ -70,3 +70,4 @@ on:
         # Run Validation command based on package.xml
         - name: 'Validation Delta Changes'
         - run: sfdx force:source:deploy --checkonly -x package/package.xml --verbose --json
+        
