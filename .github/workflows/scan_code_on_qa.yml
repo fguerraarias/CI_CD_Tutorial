@@ -1,4 +1,4 @@
-# Unique name for this worklow created by Adrian Trejo
+# Unique name for this worklow created by Adrian Trejo and Javier Guerra
 name: 'Code Validation against QA environment'
 
 # Definition when the workflow should be run
